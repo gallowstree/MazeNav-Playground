@@ -1,0 +1,107 @@
+	  0  1  2  3  4
+	+--+--+--+--+--+
+0	      |        |
+	+--+  +  +--+  +
+1	|     | ^|  |  |
+ 	+  +--+  +  +--+
+2	|        |     |
+ 	+--+--+  +--+  +
+3	|              | 
+	+--+--+--+--+--+
+
+
+	-2  -1  0  1  2
+	+--+--+--+--+--+
+-1	      |        |
+	+--+  +  +--+  +
+0	|     |  |  |  |
+ 	+  +--+  +  +--+
+1	|        |     |
+ 	+--+--+  +--+  +
+2	|              | 
+	+--+--+--+--+--+
+
+
+-> with every breadcrumb reading need to save if every direction was checked, not only if we can move there
+	lazy discover
+
+With search, find routes to all dead-ends
+
+backtrack seems to behave like this:
+ 	-only called by other f when we reach a dead end
+ 	-returns with the robot in a position where it has something pending
+ 	-maybe we only need to add inverses to the breadcrumbs when they are not empty!
+
+
+Optimize storageand memory accross clusters, having only enough copies to survive failure of some members.
+
+<(1,2), [N,S], N> -> N -> [ <(1,2),[S]> ]
+
+<(0,2), [E], N> -> E                 
+<(0,3), [E], E> -> E				 
+<(0,4), [S], E> -> S
+<(1,4), [], S>  -> backTrack* -> removeState
+
+*Backtracking can be replaced by pathFinding algorithms
+
+++ stack would look like this when we get to (1,4):
+
+[ <(1,2),[S]>, <S>, <W>, <W>, <N> ]
+
+then, after backtracking: 
+
+[ <(1,2),[S]> ] -> []
+
+then
+
+<(1,2),[S]> -> S transforms it into -> <(2,2), [S,W], S>
+
+<(2,2), [S,W], S> -> S -> [ <(2,2), [W]> ]
+<(3,2), [E,W], S> -> W -> [ <(2,2), [W]>, <(3,2), [E]> ]
+<(3,1), [W], W>   -> W
+<(3,0), [], W>    -> backTrack -> removeState
+
+stack: [ <(2,2), [W]>, <(3,2), [E]>, <E>, <E> ] -> [ <(2,2), [W]> ]
+
+<(3,2), [E]> -> E -> transforms it into -> <(3,3), [E], E>
+ ... se va hasta (1,3) y luego hace backtracking hasta <(2,2), [W]>
+
+
+
+makeState(<initialP, discover(initialP), initialD>, [])
+
+
+makeState2(<P,T,D>, breadCrumbs) -> < <P,T,D>, breadCrumbs >{
+	if T is empty
+		bc = breadCrumbs.pop //or end if no bc
+		return backTrack(bc)	
+	else
+		newD = chooseD(T,D)
+		
+		breadCrumbs += T has one (and breadCrumbs is not empty)? <newD.inverse> : <P,T-newD>
+
+		newState = transition(P, newD)
+	
+}
+
+backTrack(breadCrumbs) {
+	bc = breadCrumbs.pop
+	if (bc.hasDirections)
+		if (bc moreThanOne) //should always do this??? I think we need it for reliable backTracking <S>,etc
+			breadCrumbs += <bc.P, bc.D - chosenD>
+		return <transition(bc.P, chosenD), breadCrumbs>
+	else if (bc exists)
+		return backTrack(breadCrumbs)
+	else
+		return <empty, empty>
+}
+
+transition (P, newD) {
+	newP = P.displace(newD)
+	return <newP, discover(newP) - newD.inverse, newD>
+}
+
+
+
+
+

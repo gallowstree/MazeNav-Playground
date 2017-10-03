@@ -19,7 +19,8 @@ public class Controller {
             new Tile[] {tile(N,E),  tile(E,W),    tile(N,S,W),    tile(N,E), tile(S, W)},
             new Tile[] {tile(E),    tile(E,W),    tile(N,E,W),    tile(E,W), tile(N, W)},
     };
-    private final Vec2 startingPoint = new Vec2(2,2);
+    private final Vec2 startingPoint = new Vec2(1,2);
+    private boolean fullDebug = false;
 
     private Tile tile(Direction... d) {
         return new Tile(TreeSet.of(d));
@@ -28,6 +29,7 @@ public class Controller {
     //Can be memoized from the actual map :)
     private Tile discover(Vec2 p) {
         p = p.plus(startingPoint);
+        System.out.println(p);
         return realMaze[p.x][p.y];
     }
 
@@ -52,7 +54,7 @@ public class Controller {
                 return null;
             }
 
-            return backtrack(bc, s.facing).orElse(null);
+            return backtrack(bc, s).orElse(null);
         } else {
             Direction d = chooseDirection(s.succesors.canMoveTo, s.facing);
             if (!bc.isEmpty() || s.succesors.canMoveTo.size() > 1) {
@@ -68,42 +70,43 @@ public class Controller {
     }
 
     private void debug(Tuple2<State, List<BreadCrumb>> globalState) {
-        System.out.println("<" + globalState._1 + ", " + globalState._2 + ">");
+       /* if (fullDebug)
+            System.out.println("<" + globalState._1 + ", " + globalState._2 + ">");
+        else
+            System.out.println(globalState._1.position);*/
     }
 
-    Optional<Tuple2<State, List<BreadCrumb>>> backtrack(List<BreadCrumb> breadCrumbs, Direction facing) {
-
-        System.out.println("    Backtracking " + breadCrumbs);
-        if (breadCrumbs.isEmpty()) {
-            return Optional.empty();
-        }
+    Optional<Tuple2<State, List<BreadCrumb>>> backtrack(List<BreadCrumb> breadCrumbs, State current) {
+        //System.out.println(current.position + " (b)");
+        //System.out.println("    Backtracking " + breadCrumbs);
 
         Tuple2<BreadCrumb, List<BreadCrumb>> popResult = breadCrumbs.pop2();
         breadCrumbs = popResult._2;
         BreadCrumb bc = popResult._1;
-        Direction chosenDirection = chooseDirection(bc.successors.canMoveTo, facing); //can create a specific one for backtracking
-        if (bc.position != null) { //See if this is needed
+        Direction chosenDirection = chooseDirection(current.succesors.canMoveTo, current.facing); //can create a specific one for backtracking
+        if (breadCrumbs.isEmpty()) { //See if this is needed
             if (bc.successors.canMoveTo.size() > 1) { //In case we still need to return to places that *AFAW* are only reachable from here (to optimize, we can work on finding other ways to reach a neighbor without revisiting this tile)
                 breadCrumbs.push(new BreadCrumb(bc.successors.excluding(chosenDirection), bc.position));
             }
-            //Go-to instead of transition? only go to pending places
+        //Go-to instead of transition? only go to pending places
             return Optional.of(Tuple.of(transition(bc.position, chosenDirection), breadCrumbs));
         } else {
-            return backtrack(breadCrumbs, facing);
+            //System.out.println("*");
+            return backtrack(breadCrumbs, transition(current.position, chosenDirection));
         }
 
     }
 
     //Should we always exclude the inverse of the current D? I think the breadcrumbs cover us here...
     private State transition(Vec2 position, Direction chosenDirection) {
-        System.out.println("    transition -> " + chosenDirection);
         Vec2 newPosition = chosenDirection.displace(position);
+        //System.out.println("    transition -> " + chosenDirection + " -> " + newPosition);
         return new State(newPosition, discover(newPosition).excluding(chosenDirection.invert()), chosenDirection);
     }
 
-    //Can be made fancier to account for current facing direction
     private Direction chooseDirection(SortedSet<Direction> canMoveTo, Direction facing) {
-        System.out.println("choosing between " + canMoveTo + " facing: " + facing);
+        //System.out.println("choosing between " + canMoveTo + " facing: " + facing);
+        if (canMoveTo.isEmpty()) return facing.invert();
         return canMoveTo.contains(facing) ? facing : canMoveTo.get();
     }
 
