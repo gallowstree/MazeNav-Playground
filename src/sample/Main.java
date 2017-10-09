@@ -23,7 +23,6 @@ public class Main extends Application {
         primaryStage.show();
         StrategyRunner runner = new StrategyRunner(primaryStage);
         runner.setup(maze1, new Vec2(1,2), N, new MappingStrategy(runner));
-        runner.run();
     }
 
 

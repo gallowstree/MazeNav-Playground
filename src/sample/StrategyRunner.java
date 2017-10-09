@@ -1,17 +1,24 @@
 package sample;
 
 import io.vavr.collection.SortedSet;
+import io.vavr.collection.TreeSet;
+import javafx.animation.AnimationTimer;
+import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import static io.vavr.collection.TreeSet.empty;
 import static sample.Direction.*;
 
 public class StrategyRunner implements MappingListener{
@@ -25,6 +32,8 @@ public class StrategyRunner implements MappingListener{
     private Direction direction;
     private Tile[][] maze;
     private MappingStrategy mapper;
+    private Map<Vec2, Integer> visitedTiles = new HashMap<>();
+    private Map<Vec2, SortedSet<Direction>> walls = new HashMap<>();
 
     public StrategyRunner(Stage stage) {
         this.stage = stage;
@@ -42,11 +51,12 @@ public class StrategyRunner implements MappingListener{
         setupStage();
         drawMazeBackrgound();
         drawAgent();
+
     }
 
     private void drawAgent() {
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill(Color.DARKBLUE);
+        gc.setFill(Color.GREENYELLOW);
 
         double centerX = padding + position.y * tileSize + tileSize / 2;
         double centerY = padding + position.x * tileSize + tileSize / 2;
@@ -76,11 +86,30 @@ public class StrategyRunner implements MappingListener{
         gc.fillRect(padding, padding, frameW, frameH);
     }
 
+    private void drawTiles() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        walls.keySet().forEach(pos -> {
+            walls.get(pos).forEach(d -> drawWall(pos, d, gc));
+        });
+    }
+
+    private void drawWall(Vec2 pos, Direction d, GraphicsContext gc) {
+        gc.setStroke(Color.BLACK);
+        double x1 = padding + (pos.y + (d == E  ? 1 : 0) ) * tileSize;
+        double y1 = padding + (pos.x + (d != S  ? 0 : 1) ) * tileSize;
+        double x2 = (d == E || d == W) ? x1 : x1 + tileSize;
+        double y2 = (d == N || d == S) ? y1 : y1 + tileSize;
+        gc.strokeLine(x1, y1, x2, y2);
+    }
+
     private void setupStage() {
         Group root = new Group();
         stage.setScene(new Scene(root, frameW + padding*2, frameH + padding*2));
         canvas = new Canvas(frameW + padding, frameH + padding);
         root.getChildren().add(canvas);
+
+        stage.getScene().setOnKeyPressed(event -> { run(); });
+
     }
 
     private void verifyAllTilesVisited(Tile[][] maze) {
@@ -93,17 +122,49 @@ public class StrategyRunner implements MappingListener{
     }
 
     @Override
-    public void tileVisited(Vec2 pos) {
-
+    public void tileVisited(Vec2 pos, Direction d) {
+        if (!visitedTiles.containsKey(pos)) {
+            visitedTiles.put(pos, 0);
+        }
+        visitedTiles.put(pos, visitedTiles.get(pos) + 1);
+        position = pos;
+        direction = d;
     }
 
     @Override
     public void tileDiscovered(Vec2 pos, SortedSet<Direction> walls) {
-
+        if (!this.walls.containsKey(pos)) {
+            this.walls.put(pos, empty());
+        }
+        this.walls.put(pos, this.walls.get(pos).union(walls));
     }
 
     public void run() {
-        mapper.run(maze, position, direction);
-        verifyAllTilesVisited(maze);
+        AnimationTimer timer = new AnimationTimer() {
+            long prev;
+            MappingStrategy.GlobalState s;
+            @Override
+            public void start() {
+                super.start();
+                s = mapper.setup(maze, position, direction);
+            }
+
+            @Override
+            public void handle(long now) {
+                if (now - prev > 300000000) {
+                    s = mapper.step(s);
+                    drawMazeBackrgound();
+                    drawTiles();
+                    drawAgent();
+                    prev = now;
+                    if (s == null) {
+                        stop();
+                        verifyAllTilesVisited(maze);
+                    }
+                }
+            }
+        };
+
+        timer.start();
     }
 }

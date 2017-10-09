@@ -2,8 +2,10 @@ package sample;
 
 import io.vavr.collection.List;
 import io.vavr.collection.SortedSet;
+import io.vavr.collection.TreeSet;
 
 import static java.text.MessageFormat.format;
+import static sample.Direction.*;
 import static sample.MappingStrategy.GlobalState.gs;
 import static sample.Utils.debug;
 import static sample.Utils.str;
@@ -18,7 +20,7 @@ public class MappingStrategy {
         this.mappingListener = mappingListener;
     }
 
-    public void run(Tile[][] maze, Vec2 start, Direction initialDirection) {
+    public GlobalState setup(Tile[][] maze, Vec2 start, Direction initialDirection) {
         realMaze = maze;
         startingPoint = start;
 
@@ -26,18 +28,18 @@ public class MappingStrategy {
         Tile initialTile = discover(initialPos);
         State initialState = new State(initialPos, initialTile, initialDirection);
 
-        iterate(new GlobalState(initialState, List.empty()));
+        return  new GlobalState(initialState, List.empty());
     }
 
-    private void iterate(GlobalState globalState) {
-        debug(globalState.state, globalState.breadCrumbs);
+    public GlobalState step(GlobalState globalState) {
+        notifyState(globalState);
         State s = globalState.state;
         List<BreadCrumb> bc = globalState.breadCrumbs;
 
         if (s.succesors.canMoveTo.isEmpty() && bc.isEmpty()) {
-            return;
+            return null;
         } else if (s.succesors.canMoveTo.isEmpty()) {
-            iterate(transition(s.position, s.facing.invert(), bc));
+            return transition(s.position, s.facing.invert(), bc);
         } else {
             Direction d = chooseDirection(s.succesors.canMoveTo, s.facing);
 
@@ -50,20 +52,27 @@ public class MappingStrategy {
                 bc = bc.push(newBreadCrumb);
             }
 
-            iterate(transition(s.position, d, bc));
+            return transition(s.position, d, bc);
         }
+    }
+
+    private void notifyState(GlobalState globalState) {
+        debug(globalState.state, globalState.breadCrumbs);
+
     }
 
     private GlobalState transition(Vec2 position, Direction chosenDirection, List<BreadCrumb> bc) {
         Vec2 newPosition = chosenDirection.displace(position);
         Tile tile;
 
+        mappingListener.tileVisited(toGlobalCoordinates(newPosition), chosenDirection);
         if (!bc.isEmpty() && bc.head().position.equals(newPosition)) {
             tile = bc.head().successors;
             bc = bc.pop();
         } else {
             tile =  discover(newPosition).excluding(chosenDirection.invert());
         }
+
         return gs(new State(newPosition, tile, chosenDirection), bc);
     }
 
@@ -76,8 +85,10 @@ public class MappingStrategy {
 
     private Tile discover(Vec2 p) {
         p = toGlobalCoordinates(p);
-        realMaze[p.x][p.y].visited = true;
-        return realMaze[p.x][p.y];
+        Tile t = realMaze[p.x][p.y];
+        t.visited = true;
+        mappingListener.tileDiscovered(p, TreeSet.of(N,S,E,W).removeAll(t.canMoveTo));
+        return t;
     }
 
     private Vec2 toGlobalCoordinates(Vec2 v) {

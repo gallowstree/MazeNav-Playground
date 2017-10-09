@@ -34,4 +34,12 @@ public class Utils {
     static String str(MappingStrategy.BreadCrumb b) {
         return "<" + str(b.position) + ", " + str(b.successors.canMoveTo) + ">";
     }
+
+    static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (Exception e) {
+
+        }
+    }
 }
