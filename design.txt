@@ -1,6 +1,6 @@
 	  0  1  2  3  4
 	+--+--+--+--+--+
-0	      |        |
+0	|     |        |
 	+--+  +  +--+  +
 1	|     | ^|  |  |
  	+  +--+  +  +--+
@@ -12,11 +12,25 @@
 
 	-2  -1  0  1  2
 	+--+--+--+--+--+
--1	      |        |
+-1	|     |        |
 	+--+  +  +--+  +
 0	|     |  |  |  |
  	+  +--+  +  +--+
-1	|        |     |
+1	|       <|     |
+ 	+--+--+  +--+  +
+2	|       <      | 
+	+--+--+--+--+--+
+
+
+try this one:
+
+	-2  -1  0  1  2
+	+--+--+--+--+--+
+-1	|     |        |
+	+--+  +  +--+  +
+0	|     |  |  |  |
+ 	+  +--+  +  +--+
+1	|              |
  	+--+--+  +--+  +
 2	|              | 
 	+--+--+--+--+--+
@@ -65,42 +79,6 @@ stack: [ <(2,2), [W]>, <(3,2), [E]>, <E>, <E> ] -> [ <(2,2), [W]> ]
 
 <(3,2), [E]> -> E -> transforms it into -> <(3,3), [E], E>
  ... se va hasta (1,3) y luego hace backtracking hasta <(2,2), [W]>
-
-
-
-makeState(<initialP, discover(initialP), initialD>, [])
-
-
-makeState2(<P,T,D>, breadCrumbs) -> < <P,T,D>, breadCrumbs >{
-	if T is empty
-		bc = breadCrumbs.pop //or end if no bc
-		return backTrack(bc)	
-	else
-		newD = chooseD(T,D)
-		
-		breadCrumbs += T has one (and breadCrumbs is not empty)? <newD.inverse> : <P,T-newD>
-
-		newState = transition(P, newD)
-	
-}
-
-backTrack(breadCrumbs) {
-	bc = breadCrumbs.pop
-	if (bc.hasDirections)
-		if (bc moreThanOne) //should always do this??? I think we need it for reliable backTracking <S>,etc
-			breadCrumbs += <bc.P, bc.D - chosenD>
-		return <transition(bc.P, chosenD), breadCrumbs>
-	else if (bc exists)
-		return backTrack(breadCrumbs)
-	else
-		return <empty, empty>
-}
-
-transition (P, newD) {
-	newP = P.displace(newD)
-	return <newP, discover(newP) - newD.inverse, newD>
-}
-
 
 
 

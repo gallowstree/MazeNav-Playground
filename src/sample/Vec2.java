@@ -19,4 +19,14 @@ public final class Vec2 {
                 ", y=" + y +
                 ')';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Vec2 vec2 = (Vec2) o;
+        return vec2.x == x && vec2.y == y;
+    }
 }

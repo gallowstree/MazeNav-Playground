@@ -7,6 +7,8 @@ public class Tile {
     //Should be immutable
     public final SortedSet<Direction> canMoveTo;
 
+    public boolean visited;
+
     public Tile(SortedSet<Direction> canMoveTo) {
         this.canMoveTo = canMoveTo;
     }

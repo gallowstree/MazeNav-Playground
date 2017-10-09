@@ -28,9 +28,12 @@ public class Controller {
 
     //Can be memoized from the actual map :)
     private Tile discover(Vec2 p) {
-        p = p.plus(startingPoint);
-        System.out.println(p);
+        p = toGlobalCoordinates(p);
         return realMaze[p.x][p.y];
+    }
+
+    private Vec2 toGlobalCoordinates(Vec2 v) {
+        return v.plus(startingPoint);
     }
 
     void run() {
@@ -46,7 +49,7 @@ public class Controller {
         State s = globalState._1;
         List<BreadCrumb> bc = globalState._2;
 
-        debug(globalState);
+        debug(s, bc);
 
         if (s.succesors.canMoveTo.isEmpty()) { //We reached a dead end
             if (bc.isEmpty()) { //and there is nothing left to check
@@ -69,11 +72,11 @@ public class Controller {
 
     }
 
-    private void debug(Tuple2<State, List<BreadCrumb>> globalState) {
-       /* if (fullDebug)
-            System.out.println("<" + globalState._1 + ", " + globalState._2 + ">");
+    private void debug(State s, List<BreadCrumb> bc) {
+       if (fullDebug)
+            System.out.println("<" + s + ", " + bc+ ">");
         else
-            System.out.println(globalState._1.position);*/
+            System.out.println(s.position);
     }
 
     Optional<Tuple2<State, List<BreadCrumb>>> backtrack(List<BreadCrumb> breadCrumbs, State current) {
@@ -110,12 +113,22 @@ public class Controller {
         return canMoveTo.contains(facing) ? facing : canMoveTo.get();
     }
 
-    static class State {
-        public final Vec2 position;
-        public final Tile succesors;
-        public final Direction facing;
+    private static class GlobalState {
+        final State state;
+        final List<BreadCrumb> breadCrumbs;
 
-        public State(Vec2 position, Tile succesors, Direction facing) {
+        GlobalState(State state, List<BreadCrumb> breadCrumbs) {
+            this.state = state;
+            this.breadCrumbs = breadCrumbs;
+        }
+    }
+
+    private static class State {
+        final Vec2 position;
+        final Tile succesors;
+        final Direction facing;
+
+        State(Vec2 position, Tile succesors, Direction facing) {
             this.position = position;
             this.succesors = succesors;
             this.facing = facing;
@@ -136,15 +149,15 @@ public class Controller {
     //unexplored neighbors (and defer to search) or use some kind of optimization
     //upon the existing breadcrumb, which has the advantage of not requiring
     //extra computation in order to find a viable route (it is calculated for free)
-    static class BreadCrumb {
-        public final Vec2 position;
-        public final Tile successors;
+    private static class BreadCrumb {
+        final Vec2 position;
+        final Tile successors;
 
-        public BreadCrumb(Tile successors) {
+        BreadCrumb(Tile successors) {
             this(successors, null);
         }
 
-        public BreadCrumb(Tile successors, Vec2 position) {
+        BreadCrumb(Tile successors, Vec2 position) {
             this.position = position;
             this.successors = successors;
         }
