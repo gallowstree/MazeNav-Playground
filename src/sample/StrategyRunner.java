@@ -39,10 +39,10 @@ public class StrategyRunner implements MappingListener{
         this.stage = stage;
     }
 
-    public void setup(Tile[][] m, Vec2 start, Direction facing, MappingStrategy mappingStrategy) {
+    public void setup(Object[][] m, Vec2 start, Direction facing, MappingStrategy mappingStrategy) {
         position = start;
         direction = facing;
-        maze = m;
+        maze = (Tile[][])m;
         mapper = mappingStrategy;
 
         frameW = maze[0].length * tileSize;

@@ -56,12 +56,12 @@ public class MappingStrategy {
         }
     }
 
-    private void notifyState(GlobalState globalState) {
+    protected void notifyState(GlobalState globalState) {
         debug(globalState.state, globalState.breadCrumbs);
 
     }
 
-    private GlobalState transition(Vec2 position, Direction chosenDirection, List<BreadCrumb> bc) {
+    protected GlobalState transition(Vec2 position, Direction chosenDirection, List<BreadCrumb> bc) {
         Vec2 newPosition = chosenDirection.displace(position);
         Tile tile;
 
@@ -76,14 +76,14 @@ public class MappingStrategy {
         return gs(new State(newPosition, tile, chosenDirection), bc);
     }
 
-    private Direction chooseDirection(SortedSet<Direction> canMoveTo, Direction facing) {
+    protected Direction chooseDirection(SortedSet<Direction> canMoveTo, Direction facing) {
         if (canMoveTo.isEmpty()) {
             return facing.invert();
         }
         return canMoveTo.contains(facing) ? facing : canMoveTo.get();
     }
 
-    private Tile discover(Vec2 p) {
+    protected Tile discover(Vec2 p) {
         p = toGlobalCoordinates(p);
         Tile t = realMaze[p.x][p.y];
         t.visited = true;
@@ -91,7 +91,7 @@ public class MappingStrategy {
         return t;
     }
 
-    private Vec2 toGlobalCoordinates(Vec2 v) {
+    protected Vec2 toGlobalCoordinates(Vec2 v) {
         return v.plus(startingPoint);
     }
 
