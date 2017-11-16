@@ -1,5 +1,6 @@
 package sample;
 
+import io.vavr.collection.List;
 import io.vavr.collection.SortedSet;
 import io.vavr.collection.TreeSet;
 import javafx.animation.AnimationTimer;
@@ -29,6 +30,7 @@ public class StrategyRunner implements MappingListener{
     private double frameW, frameH;
     private Canvas canvas;
     private Vec2 position;
+    private Vec2 startPos;
     private Direction direction;
     private Tile[][] maze;
     private MappingStrategyV2 mapper;
@@ -44,6 +46,7 @@ public class StrategyRunner implements MappingListener{
         direction = facing;
         maze = (Tile[][])m;
         mapper = mappingStrategy;
+        this.startPos = start;
 
         frameW = maze[0].length * tileSize;
         frameH = maze.length * tileSize;
@@ -156,6 +159,7 @@ public class StrategyRunner implements MappingListener{
                     drawMazeBackrgound();
                     drawTiles();
                     drawAgent();
+                    drawPending(s.pendingStack);
                     prev = now;
                     if (s == null) {
                         stop();
@@ -166,5 +170,13 @@ public class StrategyRunner implements MappingListener{
         };
 
         timer.start();
+    }
+
+    private void drawPending(List<Vec2> pendingStack) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.BISQUE);
+        pendingStack.map(p -> p.plus(startPos)).forEach(p -> {
+            gc.fillOval(p.y * tileSize + tileSize/2, p.x * tileSize + tileSize/2, tileSize/2, tileSize/2);
+        });
     }
 }
