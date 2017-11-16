@@ -16,7 +16,7 @@ public enum Direction {
     public final Vec2 displacement;
 
     public Vec2 displace(Vec2 initial) {
-        return initial.plus(displacement);
+        return initial.plus(displacement).withDirection(this);
     }
 
     public Direction invert() {

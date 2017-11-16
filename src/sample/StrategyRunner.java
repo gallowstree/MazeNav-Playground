@@ -31,7 +31,7 @@ public class StrategyRunner implements MappingListener{
     private Vec2 position;
     private Direction direction;
     private Tile[][] maze;
-    private MappingStrategy mapper;
+    private MappingStrategyV2 mapper;
     private Map<Vec2, Integer> visitedTiles = new HashMap<>();
     private Map<Vec2, SortedSet<Direction>> walls = new HashMap<>();
 
@@ -39,7 +39,7 @@ public class StrategyRunner implements MappingListener{
         this.stage = stage;
     }
 
-    public void setup(Object[][] m, Vec2 start, Direction facing, MappingStrategy mappingStrategy) {
+    public void setup(Object[][] m, Vec2 start, Direction facing, MappingStrategyV2 mappingStrategy) {
         position = start;
         direction = facing;
         maze = (Tile[][])m;
@@ -142,7 +142,7 @@ public class StrategyRunner implements MappingListener{
     public void run() {
         AnimationTimer timer = new AnimationTimer() {
             long prev;
-            MappingStrategy.GlobalState s;
+            MappingStrategyV2.State s;
             @Override
             public void start() {
                 super.start();

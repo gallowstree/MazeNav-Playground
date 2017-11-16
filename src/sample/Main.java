@@ -38,7 +38,7 @@ public class Main extends Application {
 
         //Array<Object[]> transposed = List.transpose(List.of(List.of(maze1))).map(List::toJavaArray).toArray();
 
-        runner.setup(maze2, new Vec2(0,1), E, new MappingStrategy(runner));
+        runner.setup(maze2, new Vec2(0,1), E, new MappingStrategyV2(runner));
     }
 
 
