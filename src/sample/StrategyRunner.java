@@ -18,6 +18,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static io.vavr.collection.TreeSet.empty;
 import static sample.Direction.*;
@@ -154,17 +155,21 @@ public class StrategyRunner implements MappingListener{
 
             @Override
             public void handle(long now) {
-                if (now - prev > 300000000) {
-                    s = mapper.step(s);
+                if (now - prev > 400000000) {
+                    Optional<MappingStrategyV2.State> result = mapper.step(s);
+
+                    if (!result.isPresent()) {
+                        stop();
+                        verifyAllTilesVisited(maze);
+                        return;
+                    }
+                    s = result.get();
                     drawMazeBackrgound();
                     drawTiles();
                     drawAgent();
                     drawPending(s.pendingStack);
                     prev = now;
-                    if (s == null) {
-                        stop();
-                        verifyAllTilesVisited(maze);
-                    }
+
                 }
             }
         };

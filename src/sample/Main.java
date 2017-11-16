@@ -11,7 +11,7 @@ public class Main extends Application {
     Tile[][] maze2 = {
         new Tile[] {tile(E),    tile(S,W),    tile(S,E),      tile(E,W), tile(S,W)},
         new Tile[] {tile(S,E),  tile(N,W),    tile(N,S),      tile(S),   tile(N)},
-        new Tile[] {tile(N,E),  tile(E,W),    tile(N,S,W,E),    tile(N,E,W), tile(S, W)},
+        new Tile[] {tile(N,E),  tile(E,W),    tile(N,S,W),    tile(N,E), tile(S, W)},
         new Tile[] {tile(E),    tile(E,W),    tile(N,E,W),    tile(E,W), tile(N, W)},
     };
     /*Tile[][] maze1 = {

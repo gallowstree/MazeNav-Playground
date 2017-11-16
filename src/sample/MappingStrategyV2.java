@@ -5,6 +5,7 @@ import io.vavr.collection.SortedSet;
 import io.vavr.collection.TreeSet;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,16 +48,16 @@ public class MappingStrategyV2  {
                         .filter(p -> !visited.contains(p) && !finalPending.contains(p))
                         .collect(Collectors.toList()));
 
-        if (canMoveTo.contains(facing)) {
+        if (canMoveTo.contains(facing) && !pending.contains(facing.displace(pos)) && !visited.contains(facing.displace(pos))) {
             pending = pending.push(facing.displace(pos));
         }
 
         return pending;
     }
 
-    public State step(State s) {
-         if (s.pendingStack.isEmpty())
-            return null;
+    public Optional<State> step(State s) {
+         if (s == null || s.pendingStack.isEmpty())
+            return Optional.empty();
 
         Vec2 newPos = s.pendingStack.head();
         Direction newDir = newPos.direction;
@@ -64,10 +65,10 @@ public class MappingStrategyV2  {
 
         visited.add(newPos);
         mappingListener.tileVisited(toGlobalCoordinates(newPos), newDir);
-
+        newStack = newStack.removeAll(newPos);
         newStack = pushAll(discover(newPos).excluding(newDir.invert()).canMoveTo, newDir, newPos, newStack);
 
-        return new State(newPos, newDir, newStack);
+        return Optional.of(new State(newPos, newDir, newStack));
     }
 
     protected Tile discover(Vec2 p) {
