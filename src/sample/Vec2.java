@@ -39,4 +39,12 @@ public final class Vec2 {
     public Vec2 withDirection(Direction direction) {
         return new Vec2(x,y,direction);
     }
+
+    @Override
+    public int hashCode() {
+        return new org.apache.commons.lang3.builder.HashCodeBuilder(17, 37)
+                .append(x)
+                .append(y)
+                .toHashCode();
+    }
 }
