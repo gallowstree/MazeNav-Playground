@@ -2,118 +2,70 @@ package sample;
 
 import io.vavr.collection.List;
 import io.vavr.collection.SortedSet;
-import io.vavr.collection.TreeSet;
 import javafx.animation.AnimationTimer;
-import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static io.vavr.collection.TreeSet.empty;
 import static sample.Direction.*;
+import static sample.Utils.degrees;
+import static sample.Utils.rotate;
 
-public class StrategyRunner implements MappingListener{
-
-    private Stage stage;
-    private double tileSize = 90;
-    private double padding = 10;
-    private double frameW, frameH;
-    private Canvas canvas;
+public class StrategyRunner extends MazeRenderer implements MappingListener{
     private Vec2 position;
     private Vec2 startPos;
     private Direction direction;
-    private Tile[][] maze;
+
     private MappingStrategyV2 mapper;
     private Map<Vec2, Integer> visitedTiles = new HashMap<>();
-    private Map<Vec2, SortedSet<Direction>> walls = new HashMap<>();
+    private SimpleAgent agent = new SimpleAgent();
 
     public StrategyRunner(Stage stage) {
-        this.stage = stage;
+        super(stage);
+        renderables.add(agent);
     }
 
     public void setup(Object[][] m, Vec2 start, Direction facing, MappingStrategyV2 mappingStrategy) {
         position = start;
         direction = facing;
-        maze = (Tile[][])m;
+
         mapper = mappingStrategy;
         this.startPos = start;
 
-        frameW = maze[0].length * tileSize;
-        frameH = maze.length * tileSize;
-
-        setupStage();
-        drawMazeBackrgound();
-        drawAgent();
-
+        setup((Tile[][]) m);
     }
 
-    private void drawAgent() {
+
+    protected void drawTileBackgrounds() {
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill(Color.GREENYELLOW);
-
-        double centerX = padding + position.y * tileSize + tileSize / 2;
-        double centerY = padding + position.x * tileSize + tileSize / 2;
-        double halfAgentBase = tileSize * 0.4 / 2;
-        double halfAgentHeight = tileSize * 0.5 / 2;
-        gc.save();
-        rotate(gc, degrees(direction), centerX, centerY);
-        gc.fillPolygon(new double[]{centerX - halfAgentBase, centerX + halfAgentBase, centerX},
-                       new double[]{centerY + halfAgentHeight, centerY + halfAgentHeight, centerY - halfAgentHeight },3);
-        gc.restore();
+        visitedTiles.keySet().forEach(pos -> drawTileBackground(pos, gc));
     }
 
-    private double degrees(Direction direction) {
-        return direction == N ? 0 :
-               direction == S ? 180 :
-               direction == E ? 90 : -90;
+    private void drawTileBackground(Vec2 pos, GraphicsContext gc) {
+        int visitedCount = visitedTiles.getOrDefault(pos, 0);
+
+        gc.setFill(mazeBackgroundColor);
+        for (int i = 0; i < visitedCount; i++)
+            gc.setFill(((Color)gc.getFill()).saturate());
+
+        double x1 = padding + pos.y * tileSize;
+        double y1 = padding + pos.x * tileSize;
+
+        double lineWidth = gc.getLineWidth() * 2;
+        gc.fillRect(x1, y1, tileSize - lineWidth, tileSize - lineWidth);
     }
 
-    private void rotate(GraphicsContext gc, double angle, double px, double py) {
-        Rotate r = new Rotate(angle, px, py);
-        gc.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
-    }
-
-    private void drawMazeBackrgound() {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill(Color.ALICEBLUE);
-        gc.fillRect(padding, padding, frameW, frameH);
-    }
-
-    private void drawTiles() {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        walls.keySet().forEach(pos -> {
-            walls.get(pos).forEach(d -> drawWall(pos, d, gc));
-        });
-    }
-
-    private void drawWall(Vec2 pos, Direction d, GraphicsContext gc) {
-        gc.setStroke(Color.BLACK);
-        double x1 = padding + (pos.y + (d == E  ? 1 : 0) ) * tileSize;
-        double y1 = padding + (pos.x + (d != S  ? 0 : 1) ) * tileSize;
-        double x2 = (d == E || d == W) ? x1 : x1 + tileSize;
-        double y2 = (d == N || d == S) ? y1 : y1 + tileSize;
-        gc.strokeLine(x1, y1, x2, y2);
-    }
-
-    private void setupStage() {
-        Group root = new Group();
-        stage.setScene(new Scene(root, frameW + padding*2, frameH + padding*2));
-        canvas = new Canvas(frameW + padding, frameH + padding);
-        root.getChildren().add(canvas);
-
+    protected void setupStage() {
+        super.setupStage();
         stage.getScene().setOnKeyPressed(event -> { run(); });
-
     }
 
     private void verifyAllTilesVisited(Tile[][] maze) {
@@ -133,6 +85,8 @@ public class StrategyRunner implements MappingListener{
         visitedTiles.put(pos, visitedTiles.get(pos) + 1);
         position = pos;
         direction = d;
+        agent.position = pos;
+        agent.direction = d;
     }
 
     @Override
@@ -165,8 +119,9 @@ public class StrategyRunner implements MappingListener{
                     }
                     s = result.get();
                     drawMazeBackrgound();
-                    drawTiles();
-                    drawAgent();
+                    drawTileBackgrounds();
+                    drawWalls();
+                    drawRenderables();
                     drawPending(s.pendingStack);
                     prev = now;
 

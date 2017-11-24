@@ -3,8 +3,16 @@ package sample;
 import io.vavr.collection.List;
 import io.vavr.collection.SortedSet;
 import io.vavr.collection.TreeSet;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.transform.Rotate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.text.MessageFormat.format;
+import static sample.Direction.E;
+import static sample.Direction.N;
+import static sample.Direction.S;
 
 public class Utils {
 
@@ -41,5 +49,20 @@ public class Utils {
         } catch (Exception e) {
 
         }
+    }
+
+    public static void rotate(GraphicsContext gc, double angle, double px, double py) {
+        Rotate r = new Rotate(angle, px, py);
+        gc.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
+    }
+
+    public static double degrees(Direction direction) {
+        return direction == N ? 0 :
+                direction == S ? 180 :
+                        direction == E ? 90 : -90;
+    }
+
+    public static Map<Vec2, SortedSet<Direction>> wallsFromTiles(Tile[][] maze) {
+        return new HashMap<>();
     }
 }
