@@ -19,7 +19,7 @@ import static sample.Direction.*;
 import static sample.Utils.degrees;
 import static sample.Utils.rotate;
 
-public class StrategyRunner extends MazeRenderer implements MappingListener{
+public class StrategyRunner extends MazeRenderer implements MappingListener {
     private Vec2 position;
     private Vec2 startPos;
     private Direction direction;
@@ -28,21 +28,19 @@ public class StrategyRunner extends MazeRenderer implements MappingListener{
     private Map<Vec2, Integer> visitedTiles = new HashMap<>();
     private SimpleAgent agent = new SimpleAgent();
 
-    public StrategyRunner(Stage stage) {
-        super(stage);
+    public StrategyRunner() {
         renderables.add(agent);
     }
 
-    public void setup(Object[][] m, Vec2 start, Direction facing, MappingStrategyV2 mappingStrategy) {
+    public void setup(MazeView m, Vec2 start, Direction facing, MappingStrategyV2 mappingStrategy) {
         position = start;
         direction = facing;
 
         mapper = mappingStrategy;
         this.startPos = start;
 
-        setup((Tile[][]) m);
+        setup(m);
     }
-
 
     protected void drawTileBackgrounds() {
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -65,7 +63,6 @@ public class StrategyRunner extends MazeRenderer implements MappingListener{
 
     protected void setupStage() {
         super.setupStage();
-        stage.getScene().setOnKeyPressed(event -> { run(); });
     }
 
     private void verifyAllTilesVisited(Tile[][] maze) {
@@ -97,6 +94,14 @@ public class StrategyRunner extends MazeRenderer implements MappingListener{
         this.walls.put(pos, this.walls.get(pos).union(walls));
     }
 
+    private void drawPending(List<Vec2> pendingStack) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.BISQUE);
+        pendingStack.map(p -> p.plus(startPos)).forEach(p -> {
+            gc.fillOval(p.y * tileSize + tileSize/2, p.x * tileSize + tileSize/2, tileSize/2, tileSize/2);
+        });
+    }
+
     public void run() {
         AnimationTimer timer = new AnimationTimer() {
             long prev;
@@ -104,7 +109,8 @@ public class StrategyRunner extends MazeRenderer implements MappingListener{
             @Override
             public void start() {
                 super.start();
-                s = mapper.setup(maze, position, direction);
+                mapper.setup(maze, position, direction);
+                s = mapper.initial();
             }
 
             @Override
@@ -114,7 +120,7 @@ public class StrategyRunner extends MazeRenderer implements MappingListener{
 
                     if (!result.isPresent()) {
                         stop();
-                        verifyAllTilesVisited(maze);
+                        verifyAllTilesVisited(maze.realMaze);
                         return;
                     }
                     s = result.get();
@@ -130,13 +136,5 @@ public class StrategyRunner extends MazeRenderer implements MappingListener{
         };
 
         timer.start();
-    }
-
-    private void drawPending(List<Vec2> pendingStack) {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill(Color.BISQUE);
-        pendingStack.map(p -> p.plus(startPos)).forEach(p -> {
-            gc.fillOval(p.y * tileSize + tileSize/2, p.x * tileSize + tileSize/2, tileSize/2, tileSize/2);
-        });
     }
 }

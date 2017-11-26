@@ -14,13 +14,11 @@ public class MappingStrategyV2  {
     private MappingListener mappingListener;
     private Set<Vec2> visited = new HashSet<>();
     private MazeView maze;
+    private State initialState;
 
-    public MappingStrategyV2(MappingListener mappingListener) {
-        this.mappingListener = mappingListener;
-    }
 
-    public State setup(Tile[][] tiles, Vec2 start, Direction initialDirection) {
-        maze = new MazeView(tiles, start, mappingListener);
+    public void setup(MazeView maze, Vec2 start, Direction initialDirection) {
+        this.maze = maze;
 
         Vec2 initialPos = new Vec2(0,0);
         Tile t = maze.discover(initialPos, initialDirection);
@@ -28,7 +26,11 @@ public class MappingStrategyV2  {
 
         pending = pushInOrder(t.canMoveTo, initialDirection, initialPos, pending);
 
-        return new State(initialPos, initialDirection, pending);
+        initialState = new State(initialPos, initialDirection, pending);
+    }
+
+    public State initial() {
+        return initialState;
     }
 
     public Optional<State> step(State s) {

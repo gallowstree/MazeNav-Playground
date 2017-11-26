@@ -2,6 +2,7 @@ package sample;
 
 import io.vavr.collection.SortedSet;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -17,8 +18,8 @@ import java.util.Map;
 import static sample.Direction.*;
 
 public class MazeRenderer {
-    protected Stage stage;
-    protected Tile[][] maze;
+
+    protected MazeView maze;
     protected double tileSize = 90;
     protected double padding = 10;
     protected double frameW, frameH;
@@ -27,16 +28,23 @@ public class MazeRenderer {
     protected Map<Vec2, SortedSet<Direction>> walls = new HashMap<>();
     protected List<Renderable> renderables = new ArrayList<>();
 
-    public MazeRenderer(Stage stage) {
-        this.stage = stage;
+    private Group root;
+
+    public MazeRenderer() {
+        root = new Group();
+
     }
 
-    public void setup(Tile[][] m) {
+    public void setup(MazeView m) {
         maze = m;
 
-        frameW = maze[0].length * tileSize;
-        frameH = maze.length * tileSize;
+        frameW = maze.realMaze[0].length * tileSize;
+        frameH = maze.realMaze.length * tileSize;
 
+        draw();
+    }
+
+    private void draw() {
         setupStage();
         drawMazeBackrgound();
         drawWalls();
@@ -44,8 +52,8 @@ public class MazeRenderer {
     }
 
     protected void setupStage() {
-        Group root = new Group();
-        stage.setScene(new Scene(root, frameW + padding*2, frameH + padding*2));
+
+        //stage.setScene(new Scene(root, frameW + padding*2, frameH + padding*2));
         canvas = new Canvas(frameW + padding, frameH + padding);
         root.getChildren().add(canvas);
     }
@@ -77,4 +85,7 @@ public class MazeRenderer {
         renderables.forEach(r -> r.render(canvas.getGraphicsContext2D(), padding, tileSize));
     }
 
+    public Parent getRoot() {
+        return root;
+    }
 }

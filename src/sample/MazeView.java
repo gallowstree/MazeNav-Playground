@@ -5,7 +5,7 @@ import io.vavr.collection.TreeSet;
 import static sample.Direction.*;
 
 public class MazeView {
-    private Tile[][] realMaze;
+    public Tile[][] realMaze;
     private Vec2 startingPoint;
     private MappingListener mappingListener;
 
