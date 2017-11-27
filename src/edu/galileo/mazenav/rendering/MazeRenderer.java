@@ -1,21 +1,20 @@
-package sample;
+package edu.galileo.mazenav.rendering;
 
+import edu.galileo.mazenav.common.Direction;
+import edu.galileo.mazenav.common.MazeView;
+import edu.galileo.mazenav.common.Vec2;
 import io.vavr.collection.SortedSet;
 import javafx.scene.Group;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static sample.Direction.*;
 
 public class MazeRenderer {
 
@@ -32,7 +31,6 @@ public class MazeRenderer {
 
     public MazeRenderer() {
         root = new Group();
-
     }
 
     public void setup(MazeView m) {
@@ -73,16 +71,24 @@ public class MazeRenderer {
 
     protected void drawWall(Vec2 pos, Direction d, GraphicsContext gc) {
         gc.setStroke(Color.BLACK);
-        double x1 = padding + (pos.y + (d == E  ? 1 : 0) ) * tileSize;
-        double y1 = padding + (pos.x + (d != S  ? 0 : 1) ) * tileSize;
-        double x2 = (d == E || d == W) ? x1 : x1 + tileSize;
-        double y2 = (d == N || d == S) ? y1 : y1 + tileSize;
+        double x1 = padding + (pos.y + (d == Direction.E  ? 1 : 0) ) * tileSize;
+        double y1 = padding + (pos.x + (d != Direction.S  ? 0 : 1) ) * tileSize;
+        double x2 = (d == Direction.E || d == Direction.W) ? x1 : x1 + tileSize;
+        double y2 = (d == Direction.N || d == Direction.S) ? y1 : y1 + tileSize;
         gc.strokeLine(x1, y1, x2, y2);
     }
 
     //If you take the renderables as a parameter, you now have layers (depth)
     protected void drawRenderables() {
         renderables.forEach(r -> r.render(canvas.getGraphicsContext2D(), padding, tileSize));
+    }
+
+    protected void drawTileBackground(Vec2 pos) {
+
+    }
+
+    protected void drawTileBackgrounds() {
+
     }
 
     public Parent getRoot() {

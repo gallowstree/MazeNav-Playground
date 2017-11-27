@@ -1,6 +1,8 @@
-package sample;
+package edu.galileo.mazenav.common;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public enum Direction {
 
@@ -8,6 +10,9 @@ public enum Direction {
     S(new Vec2(1,0)),
     E(new Vec2(0,1)),
     W(new Vec2(0,-1));
+
+    private static HashMap<Direction, Direction> inverse = new HashMap<>();
+    private static final Map<String, Direction> fromStr = new HashMap<>();
 
     Direction(Vec2 displacement) {
         this.displacement = displacement;
@@ -23,11 +28,19 @@ public enum Direction {
         return inverse.get(this);
     }
 
-    private static HashMap<Direction, Direction> inverse = new HashMap<>();
+    public static Optional<Direction> fromString(String val) {
+        return Optional.ofNullable(fromStr.get(val));
+    }
+
     static {
         inverse.put(N, S);
         inverse.put(S, N);
         inverse.put(E, W);
         inverse.put(W, E);
+
+        fromStr.put(Character.toString('0'), W);
+        fromStr.put(Character.toString('1'), N);
+        fromStr.put(Character.toString('2'), E);
+        fromStr.put(Character.toString('3'), S);
     }
 }

@@ -1,8 +1,8 @@
-package sample;
+package edu.galileo.mazenav.common;
 
+import edu.galileo.mazenav.MappingListener;
+import edu.galileo.mazenav.StrategyRunner;
 import io.vavr.collection.TreeSet;
-
-import static sample.Direction.*;
 
 public class MazeView {
     public Tile[][] realMaze;
@@ -16,16 +16,20 @@ public class MazeView {
         this.mappingListener = mappingListener;
     }
 
-    protected Tile discover(Vec2 p, Direction newDir) {
+    public Tile discover(Vec2 p, Direction newDir) {
         p = toGlobalCoordinates(p);
         Tile t = realMaze[p.x][p.y];
         t.visited = true;
         mappingListener.tileVisited(p, newDir);
-        mappingListener.tileDiscovered(p, TreeSet.of(N,S,E,W).removeAll(t.canMoveTo));
+        mappingListener.tileDiscovered(p, TreeSet.of(Direction.N, Direction.S, Direction.E, Direction.W).removeAll(t.canMoveTo));
         return t;
     }
 
-    protected Vec2 toGlobalCoordinates(Vec2 v) {
+    public Vec2 toGlobalCoordinates(Vec2 v) {
         return v.plus(startingPoint);
+    }
+
+    public void setMappingListener(StrategyRunner mappingListener) {
+        this.mappingListener = mappingListener;
     }
 }

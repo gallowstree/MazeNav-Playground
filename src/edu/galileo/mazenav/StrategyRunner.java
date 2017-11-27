@@ -1,27 +1,26 @@
-package sample;
+package edu.galileo.mazenav;
 
+import edu.galileo.mazenav.animation.SteppedAnimation;
+import edu.galileo.mazenav.common.Direction;
+import edu.galileo.mazenav.common.MazeView;
+import edu.galileo.mazenav.common.Tile;
+import edu.galileo.mazenav.common.Vec2;
+import edu.galileo.mazenav.rendering.MazeRenderer;
+import edu.galileo.mazenav.rendering.SimpleAgent;
 import io.vavr.collection.List;
 import io.vavr.collection.SortedSet;
 import javafx.animation.AnimationTimer;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-import javafx.scene.transform.Rotate;
-import javafx.stage.Stage;
 
 import java.io.PrintStream;
 import java.util.*;
 
 import static io.vavr.collection.TreeSet.empty;
-import static sample.Direction.*;
-import static sample.Utils.degrees;
-import static sample.Utils.rotate;
 
-public class StrategyRunner extends MazeRenderer implements MappingListener {
+public class StrategyRunner extends MazeRenderer implements MappingListener, SteppedAnimation<MappingStrategyV2.State> {
     private Vec2 position;
-    private Vec2 startPos;
+    public Vec2 startPos;
     private Direction direction;
 
     private MappingStrategyV2 mapper;
@@ -39,15 +38,19 @@ public class StrategyRunner extends MazeRenderer implements MappingListener {
         mapper = mappingStrategy;
         this.startPos = start;
 
+        m.setMappingListener(this);
         setup(m);
     }
 
+    @Override
     protected void drawTileBackgrounds() {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        visitedTiles.keySet().forEach(pos -> drawTileBackground(pos, gc));
+        super.drawTileBackgrounds();
+        visitedTiles.keySet().forEach(this::drawTileBackground);
     }
 
-    private void drawTileBackground(Vec2 pos, GraphicsContext gc) {
+    @Override
+    protected void drawTileBackground(Vec2 pos) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
         int visitedCount = visitedTiles.getOrDefault(pos, 0);
 
         gc.setFill(mazeBackgroundColor);
@@ -84,6 +87,7 @@ public class StrategyRunner extends MazeRenderer implements MappingListener {
         direction = d;
         agent.position = pos;
         agent.direction = d;
+        draw();
     }
 
     @Override
@@ -92,6 +96,14 @@ public class StrategyRunner extends MazeRenderer implements MappingListener {
             this.walls.put(pos, empty());
         }
         this.walls.put(pos, this.walls.get(pos).union(walls));
+        draw();
+    }
+
+    private void draw() {
+        drawMazeBackrgound();
+        drawTileBackgrounds();
+        drawWalls();
+        drawRenderables();
     }
 
     private void drawPending(List<Vec2> pendingStack) {
@@ -102,7 +114,17 @@ public class StrategyRunner extends MazeRenderer implements MappingListener {
         });
     }
 
-    public void run() {
+    @Override
+    public MappingStrategyV2.State initial() {
+        return mapper.initial();
+    }
+
+    @Override
+    public Optional<MappingStrategyV2.State> step(MappingStrategyV2.State curr) {
+        return null;
+    }
+
+    public void runAtOwnSpeed() {
         AnimationTimer timer = new AnimationTimer() {
             long prev;
             MappingStrategyV2.State s;

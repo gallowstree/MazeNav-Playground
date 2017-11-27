@@ -1,4 +1,4 @@
-package sample.animation;
+package edu.galileo.mazenav.animation;
 
 import java.util.Optional;
 
@@ -7,5 +7,7 @@ public interface SteppedAnimation<T> {
 
     Optional<T> step(T curr);
 
-    void runAtOwnSpeed();
+    default void runAtOwnSpeed() {}
+
+    default void draw(T state) {}
 }

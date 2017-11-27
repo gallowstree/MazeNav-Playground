@@ -1,4 +1,4 @@
-package sample.search;
+package edu.galileo.mazenav.search;
 
 public class BfsSearch implements SearchAlgorithm{
 

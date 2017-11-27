@@ -1,4 +1,4 @@
-package sample;
+package edu.galileo.mazenav.common;
 
 
 import io.vavr.collection.SortedSet;

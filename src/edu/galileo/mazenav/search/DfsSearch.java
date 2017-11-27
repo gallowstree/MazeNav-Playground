@@ -1,4 +1,4 @@
-package sample.search;
+package edu.galileo.mazenav.search;
 
 public class DfsSearch implements SearchAlgorithm {
 

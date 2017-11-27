@@ -1,4 +1,4 @@
-package sample;
+package edu.galileo.mazenav.antonio;
 
 import java.io.IOException;
 

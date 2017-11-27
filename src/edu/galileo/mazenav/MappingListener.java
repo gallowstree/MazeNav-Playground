@@ -1,5 +1,7 @@
-package sample;
+package edu.galileo.mazenav;
 
+import edu.galileo.mazenav.common.Direction;
+import edu.galileo.mazenav.common.Vec2;
 import io.vavr.collection.SortedSet;
 
 public interface MappingListener {

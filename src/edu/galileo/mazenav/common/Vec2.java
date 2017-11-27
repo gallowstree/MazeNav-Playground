@@ -1,4 +1,4 @@
-package sample;
+package edu.galileo.mazenav.common;
 
 public final class Vec2 {
     public final int x, y;

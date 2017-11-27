@@ -1,49 +1,61 @@
-package sample;
+package edu.galileo.mazenav;
 
 import com.sun.tools.javac.util.List;
+import edu.galileo.mazenav.animation.SteppedAnimation;
+import edu.galileo.mazenav.antonio.AntonioControl;
+import edu.galileo.mazenav.antonio.AntonioEventListener;
+import edu.galileo.mazenav.antonio.AntonioSocketControl;
+import edu.galileo.mazenav.common.Direction;
+import edu.galileo.mazenav.common.MazeView;
+import edu.galileo.mazenav.common.Vec2;
+import edu.galileo.mazenav.rendering.MazeRenderer;
+import edu.galileo.mazenav.search.AStarSearch;
+import edu.galileo.mazenav.search.BfsSearch;
+import edu.galileo.mazenav.search.DfsSearch;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import sample.animation.SteppedAnimation;
-import sample.search.AStarSearch;
-import sample.search.BfsSearch;
-import sample.search.DfsSearch;
-import sample.search.SearchAlgorithm;
+import edu.galileo.mazenav.search.SearchAlgorithm;
 
 import java.io.IOException;
+
+import static edu.galileo.mazenav.common.Direction.N;
 
 public class Monitor {
 
     private AntonioControl antonioControl = new AntonioSocketControl();
-    private MazeRenderer renderer = new MazeRenderer();
-    private BorderPane pane = new BorderPane();
+
     private MazeView mazeView = emptyMazeView();
+    private StrategyRunner mappingRenderer = new StrategyRunner();
+    private StrategyRunner simulatorRenderer = new StrategyRunner();
+    private AntonioEventListener eventListener;
 
     private List<SearchAlgorithm> searchAlgorithms = List.of(new DfsSearch(), new BfsSearch(), new AStarSearch());
+    private List<SteppedAnimation> simulations = List.of(simulatorRenderer);
 
-    //UI STUFF
+    //JavaFX UI STUFF
     private Stage stage;
+    private BorderPane pane = new BorderPane();
     private final TextField txtIp = new TextField("192.168.1.8");
     private final Button btnConnect = new Button("Connect");
     private final VBox mappingBox = createMappingVBox();
     private final VBox simmulationBox = createSimmulationVBox();
+    private final AnchorPane mappingPane = createMappingPane(mappingRenderer.getRoot());
+    private final AnchorPane simulationPane = createMappingPane(simulatorRenderer.getRoot());
 
     private MazeView emptyMazeView() {
-        return new MazeView(Main.maze2, new Vec2(0, 0), new MappingListener() {});
+        return new MazeView(Main.emptyMaze11, new Vec2(5, 5), new MappingListener() {});
     }
 
     public Monitor() {
@@ -57,32 +69,27 @@ public class Monitor {
     private void initStage() {
         this.stage = new Stage();
         BorderPane pane = createMainPane();
-        stage.setScene(new Scene(pane, 800, 600));
+        stage.setScene(new Scene(pane, 1000, 800));
     }
 
     private BorderPane createMainPane() {
-        HBox hbox = addHBox();
+        HBox hbox = ModeBox();
         pane.setTop(hbox);
-        addStackPane(hbox);
-
-        createMainArea();
 
         mappingMode();
 
         return pane;
     }
 
-    private void createMainArea() {
-        pane.setCenter(addAnchorPane(renderer.getRoot()));
-        renderer.setup(mazeView);
-    }
-
     private void mappingMode() {
         pane.setLeft(mappingBox);
+        pane.setCenter(mappingPane);
+        mappingRenderer.setup(mazeView, new Vec2(5,5), N, null);
     }
 
     private void simulationMode() {
         pane.setLeft(simmulationBox);
+        pane.setCenter(simulationPane);
     }
 
     private void startMapping() {
@@ -92,7 +99,6 @@ public class Monitor {
             e.printStackTrace();
         }
     }
-
 
     private Text newTitle(String text) {
         Text title = new Text(text);
@@ -106,7 +112,13 @@ public class Monitor {
         Text titleConn = newTitle("Simulations");
         ListView<SteppedAnimation> lstAnimations = new ListView<>();
 
-        vbox.getChildren().addAll(titleConn, lstAnimations);
+        Button btnSimulate = new Button("Start Simulation");
+        btnSimulate.setOnAction(event -> {
+            simulatorRenderer.setup(mazeView, new Vec2(5,5), N, new MappingStrategyV2());
+            simulatorRenderer.runAtOwnSpeed();
+        });
+
+        vbox.getChildren().addAll(titleConn, lstAnimations, btnSimulate);
         return vbox;
     }
 
@@ -118,6 +130,24 @@ public class Monitor {
         HBox connectivityBox = new HBox();
         connectivityBox.setSpacing(8);
         connectivityBox.getChildren().addAll(txtIp, btnConnect);
+        btnConnect.setOnAction(event -> {
+            try {
+                eventListener = new AntonioEventListener(4421);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+            new Thread(() -> {
+                try {
+                    eventListener.mappingListener = this.mappingRenderer;
+//                    this.mappingRenderer.setup(mazeView, new Vec2(5,5), N, null);
+                    this.mappingRenderer.startPos = new Vec2(10,10);
+                    eventListener.run();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        });
 
         Text title = newTitle("Mapping");
 
@@ -154,31 +184,7 @@ public class Monitor {
         return vbox;
     }
 
-    private void addStackPane(HBox hb) {
-        StackPane stack = new StackPane();
-        Rectangle helpIcon = new Rectangle(30.0, 25.0);
-        helpIcon.setFill(new LinearGradient(0,0,0,1, true, CycleMethod.NO_CYCLE,
-                new Stop(0,Color.web("#4977A3")),
-                new Stop(0.5, Color.web("#B0C6DA")),
-                new Stop(1,Color.web("#9CB6CF"))));
-        helpIcon.setStroke(Color.web("#D0E6FA"));
-        helpIcon.setArcHeight(3.5);
-        helpIcon.setArcWidth(3.5);
-
-        Text helpText = new Text("?");
-        helpText.setFont(Font.font("Verdana", FontWeight.BOLD, 18));
-        helpText.setFill(Color.WHITE);
-        helpText.setStroke(Color.web("#7080A0"));
-
-        stack.getChildren().addAll(helpIcon, helpText);
-        stack.setAlignment(Pos.CENTER_RIGHT);     // Right-justify nodes in stack
-        StackPane.setMargin(helpText, new Insets(0, 10, 0, 0)); // Center "?"
-
-        hb.getChildren().add(stack);            // Add to HBox from Example 1-2
-        HBox.setHgrow(stack, Priority.ALWAYS);    // Give stack any extra space
-    }
-
-    private HBox addHBox() {
+    private HBox ModeBox() {
         HBox hbox = new HBox();
         hbox.setPadding(new Insets(15, 12, 15, 12));
         hbox.setSpacing(10);
@@ -186,6 +192,7 @@ public class Monitor {
 
         Button buttonExplore = new Button("Control");
         buttonExplore.setPrefSize(100, 20);
+        buttonExplore.setOnAction(event -> mappingMode());
 
         Button buttonProjected = new Button("Simulator");
         buttonProjected.setPrefSize(100, 20);
@@ -199,7 +206,7 @@ public class Monitor {
         return hbox;
     }
 
-    private AnchorPane addAnchorPane(Parent grid) {
+    private AnchorPane createMappingPane(Parent grid) {
         AnchorPane anchorpane = new AnchorPane();
         Button buttonSave = new Button("Save");
         Button buttonCancel = new Button("Cancel");

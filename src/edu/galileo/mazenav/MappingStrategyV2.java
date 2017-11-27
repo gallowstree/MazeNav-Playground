@@ -1,5 +1,9 @@
-package sample;
+package edu.galileo.mazenav;
 
+import edu.galileo.mazenav.common.Direction;
+import edu.galileo.mazenav.common.MazeView;
+import edu.galileo.mazenav.common.Tile;
+import edu.galileo.mazenav.common.Vec2;
 import io.vavr.collection.List;
 import io.vavr.collection.SortedSet;
 
@@ -11,7 +15,6 @@ import java.util.stream.Collectors;
 
 public class MappingStrategyV2  {
 
-    private MappingListener mappingListener;
     private Set<Vec2> visited = new HashSet<>();
     private MazeView maze;
     private State initialState;

@@ -1,4 +1,4 @@
-package sample;
+package edu.galileo.mazenav.rendering;
 
 import javafx.scene.canvas.GraphicsContext;
 
